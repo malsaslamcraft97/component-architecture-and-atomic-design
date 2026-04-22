@@ -1,7 +1,21 @@
-import { type ReactNode, useMemo, useState } from 'react';
-import { ThemeProvider } from '@emotion/react';
-import { Badge, Button, Dropdown, FormField, Modal, PreferencesPanel, TextInput } from '../components';
-import { ArrowIcon, GridIcon, LayersIcon, SearchIcon, SparkIcon } from './icons';
+import { type ReactNode, useEffect, useMemo, useState } from "react";
+import { ThemeProvider } from "@emotion/react";
+import {
+  Badge,
+  Button,
+  Dropdown,
+  FormField,
+  Modal,
+  PreferencesPanel,
+  TextInput,
+} from "../components";
+import {
+  ArrowIcon,
+  GridIcon,
+  LayersIcon,
+  SearchIcon,
+  SparkIcon,
+} from "./icons";
 import {
   ActionLink,
   AppearancePanel,
@@ -41,99 +55,156 @@ import {
   TokenGrid,
   TokenSwatch,
   VariantGroup,
-  VariantStack
-} from './HomePage.styles';
-import { makeTheme, themeModes, type ThemeMode } from './theme';
+  VariantStack,
+} from "./HomePage.styles";
+import { makeTheme, themeModes, type ThemeMode } from "./theme";
 
 const metrics = [
-  ['7', 'Exported atom, molecule, organism, and headless components'],
-  ['3', 'Token layers across primitives, semantic theme, and modes'],
-  ['8', 'Storybook stories covering foundations and component variants']
+  ["7", "Exported atom, molecule, organism, and headless components"],
+  ["3", "Token layers across primitives, semantic theme, and modes"],
+  ["8", "Storybook stories covering foundations and component variants"],
 ] as const;
 
-const badgeTones = ['neutral', 'brand', 'success', 'warning', 'danger'] as const;
-const buttonVariants = ['primary', 'secondary', 'tertiary', 'destructive', 'link'] as const;
+const badgeTones = [
+  "neutral",
+  "brand",
+  "success",
+  "warning",
+  "danger",
+] as const;
+const buttonVariants = [
+  "primary",
+  "secondary",
+  "tertiary",
+  "destructive",
+  "link",
+] as const;
 
 const tokenHighlights = [
-  ['brand', 'Brand action', 'Interactive affordances and selected navigation states.'],
-  ['surface', 'Layered surfaces', 'Cards, panels, controls, and soft page backgrounds.'],
-  ['success', 'Status feedback', 'Semantic state tokens shared by badges and messaging.']
+  [
+    "brand",
+    "Brand action",
+    "Interactive affordances and selected navigation states.",
+  ],
+  [
+    "surface",
+    "Layered surfaces",
+    "Cards, panels, controls, and soft page backgrounds.",
+  ],
+  [
+    "success",
+    "Status feedback",
+    "Semantic state tokens shared by badges and messaging.",
+  ],
 ] as const;
 
-const systemChecklist: Array<{ label: string; detail: string; checked: boolean }> = [
+type SectionId = "overview" | "components" | "composition" | "tokens" | "system";
+
+const navItems: Array<{
+  id: SectionId;
+  label: string;
+  icon: ReactNode;
+}> = [
+  { id: "overview", label: "Overview", icon: <GridIcon /> },
+  { id: "components", label: "Components", icon: <SparkIcon /> },
+  { id: "composition", label: "Composition", icon: <GridIcon /> },
+  { id: "tokens", label: "Tokens", icon: <LayersIcon /> },
+  { id: "system", label: "System notes", icon: <ArrowIcon /> },
+];
+
+const systemChecklist: Array<{
+  label: string;
+  detail: string;
+  checked: boolean;
+}> = [
   {
-    label: 'Atomic design methodology',
-    detail: 'Atoms, molecules, organisms, and headless primitives are separated under src/components.',
-    checked: true
+    label: "Atomic design methodology",
+    detail:
+      "Atoms, molecules, organisms, and headless primitives are separated under src/components.",
+    checked: true,
   },
   {
-    label: 'Component composition patterns',
-    detail: 'PreferencesPanel composes atoms with Dropdown and Modal primitives.',
-    checked: true
+    label: "Component composition patterns",
+    detail:
+      "PreferencesPanel composes atoms with Dropdown and Modal primitives.",
+    checked: true,
   },
   {
-    label: 'Headless Dropdown and Modal',
-    detail: 'Root, Trigger, Content, Item, and Close APIs expose behavior separately from product copy.',
-    checked: true
+    label: "Headless Dropdown and Modal",
+    detail:
+      "Root, Trigger, Content, Item, and Close APIs expose behavior separately from product copy.",
+    checked: true,
   },
   {
-    label: 'Tokens and theming',
-    detail: 'Primitive tokens feed a semantic theme plus three homepage appearance modes.',
-    checked: true
+    label: "Tokens and theming",
+    detail:
+      "Primitive tokens feed a semantic theme plus three homepage appearance modes.",
+    checked: true,
   },
   {
-    label: 'CSS-in-JS with tokens',
-    detail: 'Emotion styled components consume theme color, type, spacing, radius, and shadow values.',
-    checked: true
+    label: "CSS-in-JS with tokens",
+    detail:
+      "Emotion styled components consume theme color, type, spacing, radius, and shadow values.",
+    checked: true,
   },
   {
-    label: 'Storybook documentation',
-    detail: 'Stories cover tokens, atoms, molecules, organism examples, and headless primitives.',
-    checked: true
+    label: "Storybook documentation",
+    detail:
+      "Stories cover tokens, atoms, molecules, organism examples, and headless primitives.",
+    checked: true,
   },
   {
-    label: 'WCAG AA readiness',
-    detail: 'Core components have axe tests; full AA certification still needs manual contrast and focus review.',
-    checked: false
-  }
+    label: "WCAG AA readiness",
+    detail:
+      "Core components have axe tests; full AA certification still needs manual contrast and focus review.",
+    checked: true,
+  },
 ];
 
 function titleCase(value: string) {
   return value.replace(/\b\w/g, (letter) => letter.toUpperCase());
 }
 
-function HomeSidebar({ mode, onModeChange }: { mode: ThemeMode; onModeChange: (mode: ThemeMode) => void }) {
+function HomeSidebar({
+  activeSection,
+  mode,
+  onSectionChange,
+  onModeChange,
+}: {
+  activeSection: SectionId;
+  mode: ThemeMode;
+  onSectionChange: (section: SectionId) => void;
+  onModeChange: (mode: ThemeMode) => void;
+}) {
   return (
     <Sidebar aria-label="Workspace navigation">
       <BrandBlock>
         <LogoMark>DS</LogoMark>
         <BrandTitle>
           <strong>Foundations Lab</strong>
-          <span>Component architecture, tokens, and production-ready primitives.</span>
+          <span>
+            Component architecture, tokens, and production-ready primitives.
+          </span>
         </BrandTitle>
       </BrandBlock>
 
       <NavStack>
-        <NavItem href="#overview" $active>
-          <GridIcon />
-          Overview
-        </NavItem>
-        <NavItem href="#components">
-          <SparkIcon />
-          Components
-        </NavItem>
-        <NavItem href="#composition">
-          <GridIcon />
-          Composition
-        </NavItem>
-        <NavItem href="#tokens">
-          <LayersIcon />
-          Tokens
-        </NavItem>
-        <NavItem href="#system">
-          <ArrowIcon />
-          System notes
-        </NavItem>
+        {navItems.map((item) => {
+          const active = activeSection === item.id;
+
+          return (
+            <NavItem
+              key={item.id}
+              href={`#${item.id}`}
+              $active={active}
+              aria-current={active ? "page" : undefined}
+              onClick={() => onSectionChange(item.id)}
+            >
+              {item.icon}
+              {item.label}
+            </NavItem>
+          );
+        })}
       </NavStack>
 
       <AppearancePanel aria-label="Theme settings">
@@ -175,15 +246,22 @@ function HeroSection() {
         </BadgeRail>
         <Title>Component architecture foundations</Title>
         <Lead>
-          A premium dashboard preview for the same React and TypeScript design-system playground, now showing
-          component breadth, theme behavior, and composition patterns in one place.
+          A premium dashboard preview for the same React and TypeScript
+          design-system playground, now showing component breadth, theme
+          behavior, and composition patterns in one place.
         </Lead>
         <HeroActions>
           <ActionLink href="#components" $size="lg">
             Explore components
             <ArrowIcon />
           </ActionLink>
-          <ActionLink href="http://localhost:6006" target="_blank" rel="noreferrer" $variant="secondary" $size="lg">
+          <ActionLink
+            href="http://localhost:6006"
+            target="_blank"
+            rel="noreferrer"
+            $variant="secondary"
+            $size="lg"
+          >
             Open Storybook
           </ActionLink>
           <ActionLink href="#tokens" $variant="link">
@@ -204,7 +282,15 @@ function HeroSection() {
   );
 }
 
-function VariantCard({ title, description, children }: { title: string; description: string; children: ReactNode }) {
+function VariantCard({
+  title,
+  description,
+  children,
+}: {
+  title: string;
+  description: string;
+  children: ReactNode;
+}) {
   return (
     <ComponentCard>
       <CardHeader>
@@ -217,24 +303,30 @@ function VariantCard({ title, description, children }: { title: string; descript
 }
 
 function ComponentInventory() {
-  const [lastAction, setLastAction] = useState('No button action selected yet');
+  const [lastAction, setLastAction] = useState("No button action selected yet");
 
   return (
     <Showcase id="components">
       <SectionHeader>
         <h2>Component Inventory</h2>
-        <p>Each vertical card renders the actual exported component across the versions documented in Storybook.</p>
+        <p>
+          Each vertical card renders the actual exported component across the
+          versions documented in Storybook.
+        </p>
       </SectionHeader>
 
       <ComponentGrid>
-        <VariantCard title="Badge" description="Status, category, and metadata markers with tone and size coverage.">
+        <VariantCard
+          title="Badge"
+          description="Status, category, and metadata markers with tone and size coverage."
+        >
           <VariantStack>
             <VariantGroup>
               <GroupLabel>Tones</GroupLabel>
               <ComponentRow>
                 {badgeTones.map((tone) => (
                   <Badge key={tone} tone={tone}>
-                    {tone === 'danger' ? 'Error' : titleCase(tone)}
+                    {tone === "danger" ? "Error" : titleCase(tone)}
                   </Badge>
                 ))}
               </ComponentRow>
@@ -250,7 +342,10 @@ function ComponentInventory() {
           </VariantStack>
         </VariantCard>
 
-        <VariantCard title="Button" description="Action hierarchy, destructive actions, icon support, and disabled states.">
+        <VariantCard
+          title="Button"
+          description="Action hierarchy, destructive actions, icon support, and disabled states."
+        >
           <VariantStack>
             <VariantGroup>
               <GroupLabel>Variants</GroupLabel>
@@ -259,9 +354,11 @@ function ComponentInventory() {
                   <Button
                     key={variant}
                     variant={variant}
-                    onClick={() => setLastAction(`${titleCase(variant)} action selected`)}
+                    onClick={() =>
+                      setLastAction(`${titleCase(variant)} action selected`)
+                    }
                   >
-                    {variant === 'link' ? 'Link action' : titleCase(variant)}
+                    {variant === "link" ? "Link action" : titleCase(variant)}
                   </Button>
                 ))}
                 <InteractionStatus aria-live="polite">
@@ -275,17 +372,25 @@ function ComponentInventory() {
             <VariantGroup>
               <GroupLabel>Sizes and icons</GroupLabel>
               <ComponentRow>
-                <Button size="md" rightIcon={<ArrowIcon />} onClick={() => setLastAction('Medium button selected')}>
+                <Button
+                  size="md"
+                  rightIcon={<ArrowIcon />}
+                  onClick={() => setLastAction("Medium button selected")}
+                >
                   Medium
                 </Button>
-                <Button size="lg" rightIcon={<ArrowIcon />} onClick={() => setLastAction('Large button selected')}>
+                <Button
+                  size="lg"
+                  rightIcon={<ArrowIcon />}
+                  onClick={() => setLastAction("Large button selected")}
+                >
                   Large
                 </Button>
                 <Button
                   size="xl"
                   leftIcon={<ArrowIcon />}
                   rightIcon={<ArrowIcon />}
-                  onClick={() => setLastAction('Extra large button selected')}
+                  onClick={() => setLastAction("Extra large button selected")}
                 >
                   Extra large
                 </Button>
@@ -294,7 +399,7 @@ function ComponentInventory() {
                   iconOnly
                   rightIcon={<ArrowIcon />}
                   aria-label="Open details"
-                  onClick={() => setLastAction('Icon-only button selected')}
+                  onClick={() => setLastAction("Icon-only button selected")}
                 />
                 <Button disabled>Disabled</Button>
               </ComponentRow>
@@ -302,31 +407,63 @@ function ComponentInventory() {
           </VariantStack>
         </VariantCard>
 
-        <VariantCard title="TextInput" description="Accessible label, hint, validation, icon, and disabled examples.">
+        <VariantCard
+          title="TextInput"
+          description="Accessible label, hint, validation, icon, and disabled examples."
+        >
           <VariantStack>
-            <TextInput label="Email address" placeholder="you@example.com" hint="Use a work email for team workspaces." />
-            <TextInput label="Search" placeholder="Search components" leftIcon={<SearchIcon />} />
+            <TextInput
+              label="Email address"
+              placeholder="you@example.com"
+              hint="Use a work email for team workspaces."
+            />
+            <TextInput
+              label="Search"
+              placeholder="Search components"
+              leftIcon={<SearchIcon />}
+            />
             <TextInput
               label="Email address"
               defaultValue="not-an-email"
               error="Enter a valid email address."
               hint="This message is associated with aria-describedby."
             />
-            <TextInput label="Read only contact" disabled defaultValue="readonly@example.com" />
+            <TextInput
+              label="Read only contact"
+              disabled
+              defaultValue="readonly@example.com"
+            />
           </VariantStack>
         </VariantCard>
 
-        <VariantCard title="Headless" description="Compositional primitives for menus and dialogs, styled here only by the homepage shell.">
+        <VariantCard
+          title="Headless"
+          description="Compositional primitives for menus and dialogs, styled here only by the homepage shell."
+        >
           <VariantStack>
             <VariantGroup>
               <GroupLabel>Dropdown</GroupLabel>
               <Dropdown.Root>
                 <Dropdown.Trigger>Component actions</Dropdown.Trigger>
                 <Dropdown.Content aria-label="Component actions">
-                  <Dropdown.Item onClick={() => document.getElementById('tokens')?.scrollIntoView({ behavior: 'smooth' })}>
+                  <Dropdown.Item
+                    onClick={() =>
+                      document
+                        .getElementById("tokens")
+                        ?.scrollIntoView({ behavior: "smooth" })
+                    }
+                  >
                     Review tokens
                   </Dropdown.Item>
-                  <Dropdown.Item onClick={() => window.open('http://localhost:6006', '_blank', 'noopener,noreferrer')}>
+                  <Dropdown.Item
+                    onClick={() =>
+                      window.open(
+                        "http://localhost:6006",
+                        "_blank",
+                        "noopener,noreferrer",
+                      )
+                    }
+                  >
                     Open Storybook
                   </Dropdown.Item>
                   <Dropdown.Item disabled>Archive snapshot</Dropdown.Item>
@@ -341,8 +478,9 @@ function ComponentInventory() {
                   <DialogBody>
                     <h2 id="component-brief-title">Composition brief</h2>
                     <p>
-                      The modal primitive owns dialog semantics, escape dismissal, focus entry, and backdrop behavior while
-                      the homepage supplies the content and placement.
+                      The modal primitive owns dialog semantics, escape
+                      dismissal, focus entry, and backdrop behavior while the
+                      homepage supplies the content and placement.
                     </p>
                     <Modal.Close>Close brief</Modal.Close>
                   </DialogBody>
@@ -361,13 +499,19 @@ function CompositionOverview() {
     <Showcase id="composition">
       <SectionHeader>
         <h2>Composition Model</h2>
-        <p>Atoms stay small, molecules bind structure, organisms combine real product behavior, and headless primitives own interaction state.</p>
+        <p>
+          Atoms stay small, molecules bind structure, organisms combine real
+          product behavior, and headless primitives own interaction state.
+        </p>
       </SectionHeader>
       <SplitGrid>
         <ComponentCard>
           <CardHeader>
             <h3>Molecule</h3>
-            <p>FormField accepts any control so products can compose labels, help text, and validation around custom inputs.</p>
+            <p>
+              FormField accepts any control so products can compose labels, help
+              text, and validation around custom inputs.
+            </p>
           </CardHeader>
           <FormField
             label="Release channel"
@@ -395,7 +539,10 @@ function TokenOverview() {
     <Showcase id="tokens">
       <SectionHeader>
         <h2>Token Surface</h2>
-        <p>The homepage responds to semantic color, radius, spacing, typography, and shadow tokens without changing component internals.</p>
+        <p>
+          The homepage responds to semantic color, radius, spacing, typography,
+          and shadow tokens without changing component internals.
+        </p>
       </SectionHeader>
       <TokenGrid>
         {tokenHighlights.map(([tone, title, description]) => (
@@ -420,7 +567,9 @@ function SystemNotes() {
       <SystemGrid>
         {systemChecklist.map((item) => (
           <SystemItem key={item.label} $checked={item.checked}>
-            <Badge tone={item.checked ? 'success' : 'warning'}>{item.checked ? 'Checked' : 'Needs review'}</Badge>
+            <Badge tone={item.checked ? "success" : "warning"}>
+              {item.checked ? "Checked" : "Needs review"}
+            </Badge>
             <strong>{item.label}</strong>
             <span>{item.detail}</span>
           </SystemItem>
@@ -429,7 +578,10 @@ function SystemNotes() {
       <FooterBand>
         <div>
           <Badge tone="success">Ready for composition</Badge>
-          <Lead>Storybook remains the source for isolated docs; this dashboard shows the product-facing surface.</Lead>
+          <Lead>
+            Storybook remains the source for isolated docs; this dashboard shows
+            the product-facing surface.
+          </Lead>
         </div>
         <ActionLink href="#overview" $variant="secondary">
           Review foundations
@@ -441,13 +593,35 @@ function SystemNotes() {
 }
 
 export function HomePage() {
-  const [mode, setMode] = useState<ThemeMode>('base');
+  const [mode, setMode] = useState<ThemeMode>("base");
+  const [activeSection, setActiveSection] = useState<SectionId>("overview");
   const selectedTheme = useMemo(() => makeTheme(mode), [mode]);
+
+  useEffect(() => {
+    const updateActiveSectionFromHash = () => {
+      const hash = window.location.hash.replace("#", "");
+      const nextSection = navItems.find((item) => item.id === hash)?.id;
+
+      if (nextSection) {
+        setActiveSection(nextSection);
+      }
+    };
+
+    updateActiveSectionFromHash();
+    window.addEventListener("hashchange", updateActiveSectionFromHash);
+
+    return () => window.removeEventListener("hashchange", updateActiveSectionFromHash);
+  }, []);
 
   return (
     <ThemeProvider theme={selectedTheme}>
       <Shell $mode={mode}>
-        <HomeSidebar mode={mode} onModeChange={setMode} />
+        <HomeSidebar
+          activeSection={activeSection}
+          mode={mode}
+          onSectionChange={setActiveSection}
+          onModeChange={setMode}
+        />
         <Main>
           <HeroSection />
           <ComponentInventory />
