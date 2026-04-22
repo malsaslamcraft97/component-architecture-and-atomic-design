@@ -1,17 +1,11 @@
-import { ThemeProvider } from '@emotion/react';
-import type { ReactElement } from 'react';
-import { render, screen } from '@testing-library/react';
+import { screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { axe } from 'jest-axe';
 import { describe, expect, it } from 'vitest';
 import { Badge, Button, FormField, PreferencesPanel, TextInput } from './index';
 import { Dropdown } from './headless/Dropdown';
 import { Modal } from './headless/Modal';
-import { theme } from '../tokens';
-
-function renderWithTheme(ui: ReactElement) {
-  return render(<ThemeProvider theme={theme}>{ui}</ThemeProvider>);
-}
+import { renderWithTheme } from '../test/renderWithTheme';
 
 describe('design system accessibility', () => {
   it('renders atoms without axe violations', async () => {
