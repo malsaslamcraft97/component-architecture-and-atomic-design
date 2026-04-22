@@ -5,12 +5,15 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "dev:e2e": "vite --host 127.0.0.1 --port 5173 --strictPort",
     "build": "tsc --noEmit && vite build",
     "preview": "vite preview",
     "storybook": "storybook dev -p 6006",
     "build-storybook": "storybook build",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "test:e2e": "start-server-and-test dev:e2e http://127.0.0.1:5173 \"env -u ELECTRON_RUN_AS_NODE cypress run\"",
+    "test:e2e:open": "env -u ELECTRON_RUN_AS_NODE cypress open"
   },
   "dependencies": {
     "@emotion/react": "^11.11.4",
@@ -33,9 +36,11 @@
     "@types/react": "^18.3.5",
     "@types/react-dom": "^18.3.0",
     "@vitejs/plugin-react": "^4.3.1",
+    "cypress": "^13.17.0",
     "eslint-plugin-storybook": "^0.8.0",
     "jest-axe": "^9.0.0",
     "jsdom": "^24.1.1",
+    "start-server-and-test": "^3.0.2",
     "storybook": "^8.2.9",
     "typescript": "^5.5.4",
     "vitest": "^2.0.5"
