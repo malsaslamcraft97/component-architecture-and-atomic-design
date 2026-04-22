@@ -317,6 +317,17 @@ export const ComponentGrid = styled.div`
   }
 `;
 
+export const SplitGrid = styled.div`
+  align-items: start;
+  display: grid;
+  gap: ${({ theme }) => theme.space[5]};
+  grid-template-columns: minmax(18rem, 0.85fr) minmax(20rem, 1.15fr);
+
+  @media (max-width: 76rem) {
+    grid-template-columns: 1fr;
+  }
+`;
+
 export const ComponentCard = styled.article`
   background: ${({ theme }) => theme.color.surface};
   border: 1px solid ${({ theme }) => theme.color.border};
@@ -436,6 +447,38 @@ export const SwatchPreview = styled.div<{ $tone: 'brand' | 'surface' | 'success'
   border: 1px solid ${({ theme }) => theme.color.border};
   border-radius: ${({ theme }) => theme.radius.md};
   height: 3rem;
+`;
+
+export const SystemGrid = styled.div`
+  display: grid;
+  gap: ${({ theme }) => theme.space[4]};
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+
+  @media (max-width: 72rem) {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  @media (max-width: 44rem) {
+    grid-template-columns: 1fr;
+  }
+`;
+
+export const SystemItem = styled.div<{ $checked: boolean }>`
+  background: ${({ theme }) => theme.color.surface};
+  border: 1px solid ${({ theme, $checked }) => ($checked ? theme.color.border : theme.color.warning.text)};
+  border-radius: ${({ theme }) => theme.radius.lg};
+  display: grid;
+  gap: ${({ theme }) => theme.space[3]};
+  padding: ${({ theme }) => theme.space[4]};
+
+  strong {
+    font-size: ${({ theme }) => theme.font.size.lg};
+  }
+
+  span {
+    color: ${({ theme }) => theme.color.textMuted};
+    line-height: ${({ theme }) => theme.font.lineHeight.normal};
+  }
 `;
 
 export const FooterBand = styled.section`

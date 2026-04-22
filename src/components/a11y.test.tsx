@@ -4,7 +4,7 @@ import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { axe } from 'jest-axe';
 import { describe, expect, it } from 'vitest';
-import { Badge, Button, TextInput } from './index';
+import { Badge, Button, FormField, PreferencesPanel, TextInput } from './index';
 import { Dropdown } from './headless/Dropdown';
 import { Modal } from './headless/Modal';
 import { theme } from '../tokens';
@@ -21,6 +21,21 @@ describe('design system accessibility', () => {
         <Button iconOnly aria-label="Next" rightIcon={<span aria-hidden="true">›</span>} />
         <TextInput label="Email" hint="Use your work email." placeholder="you@example.com" />
         <Badge tone="success">Ready</Badge>
+      </div>
+    );
+
+    expect(await axe(container)).toHaveNoViolations();
+  });
+
+  it('renders molecule and organism compositions without axe violations', async () => {
+    const { container } = renderWithTheme(
+      <div>
+        <FormField
+          label="Project handle"
+          description="Used in generated examples."
+          control={<input aria-label="Project handle" defaultValue="foundations-lab" />}
+        />
+        <PreferencesPanel />
       </div>
     );
 

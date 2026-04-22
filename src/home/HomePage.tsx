@@ -1,6 +1,6 @@
-import { useMemo, useState } from 'react';
+import { type ReactNode, useMemo, useState } from 'react';
 import { ThemeProvider } from '@emotion/react';
-import { Badge, Button, Dropdown, Modal, TextInput } from '../components';
+import { Badge, Button, Dropdown, FormField, Modal, PreferencesPanel, TextInput } from '../components';
 import { ArrowIcon, GridIcon, LayersIcon, SearchIcon, SparkIcon } from './icons';
 import {
   ActionLink,
@@ -32,7 +32,10 @@ import {
   Shell,
   Showcase,
   Sidebar,
+  SplitGrid,
   SwatchPreview,
+  SystemGrid,
+  SystemItem,
   ThemeChoice,
   Title,
   TokenGrid,
@@ -41,6 +44,63 @@ import {
   VariantStack
 } from './HomePage.styles';
 import { makeTheme, themeModes, type ThemeMode } from './theme';
+
+const metrics = [
+  ['7', 'Exported atom, molecule, organism, and headless components'],
+  ['3', 'Token layers across primitives, semantic theme, and modes'],
+  ['8', 'Storybook stories covering foundations and component variants']
+] as const;
+
+const badgeTones = ['neutral', 'brand', 'success', 'warning', 'danger'] as const;
+const buttonVariants = ['primary', 'secondary', 'tertiary', 'destructive', 'link'] as const;
+
+const tokenHighlights = [
+  ['brand', 'Brand action', 'Interactive affordances and selected navigation states.'],
+  ['surface', 'Layered surfaces', 'Cards, panels, controls, and soft page backgrounds.'],
+  ['success', 'Status feedback', 'Semantic state tokens shared by badges and messaging.']
+] as const;
+
+const systemChecklist: Array<{ label: string; detail: string; checked: boolean }> = [
+  {
+    label: 'Atomic design methodology',
+    detail: 'Atoms, molecules, organisms, and headless primitives are separated under src/components.',
+    checked: true
+  },
+  {
+    label: 'Component composition patterns',
+    detail: 'PreferencesPanel composes atoms with Dropdown and Modal primitives.',
+    checked: true
+  },
+  {
+    label: 'Headless Dropdown and Modal',
+    detail: 'Root, Trigger, Content, Item, and Close APIs expose behavior separately from product copy.',
+    checked: true
+  },
+  {
+    label: 'Tokens and theming',
+    detail: 'Primitive tokens feed a semantic theme plus three homepage appearance modes.',
+    checked: true
+  },
+  {
+    label: 'CSS-in-JS with tokens',
+    detail: 'Emotion styled components consume theme color, type, spacing, radius, and shadow values.',
+    checked: true
+  },
+  {
+    label: 'Storybook documentation',
+    detail: 'Stories cover tokens, atoms, molecules, organism examples, and headless primitives.',
+    checked: true
+  },
+  {
+    label: 'WCAG AA readiness',
+    detail: 'Core components have axe tests; full AA certification still needs manual contrast and focus review.',
+    checked: false
+  }
+];
+
+function titleCase(value: string) {
+  return value.replace(/\b\w/g, (letter) => letter.toUpperCase());
+}
 
 function HomeSidebar({ mode, onModeChange }: { mode: ThemeMode; onModeChange: (mode: ThemeMode) => void }) {
   return (
@@ -61,6 +121,10 @@ function HomeSidebar({ mode, onModeChange }: { mode: ThemeMode; onModeChange: (m
         <NavItem href="#components">
           <SparkIcon />
           Components
+        </NavItem>
+        <NavItem href="#composition">
+          <GridIcon />
+          Composition
         </NavItem>
         <NavItem href="#tokens">
           <LayersIcon />
@@ -129,20 +193,26 @@ function HeroSection() {
       </HeroCopy>
 
       <Metrics aria-label="Design system summary">
-        <MetricRow>
-          <strong>5</strong>
-          <span>Core and headless components showcased with variants</span>
-        </MetricRow>
-        <MetricRow>
-          <strong>5</strong>
-          <span>Button intents from primary to link</span>
-        </MetricRow>
-        <MetricRow>
-          <strong>3</strong>
-          <span>Homepage appearance modes</span>
-        </MetricRow>
+        {metrics.map(([value, label]) => (
+          <MetricRow key={label}>
+            <strong>{value}</strong>
+            <span>{label}</span>
+          </MetricRow>
+        ))}
       </Metrics>
     </Hero>
+  );
+}
+
+function VariantCard({ title, description, children }: { title: string; description: string; children: ReactNode }) {
+  return (
+    <ComponentCard>
+      <CardHeader>
+        <h3>{title}</h3>
+        <p>{description}</p>
+      </CardHeader>
+      {children}
+    </ComponentCard>
   );
 }
 
@@ -157,20 +227,16 @@ function ComponentInventory() {
       </SectionHeader>
 
       <ComponentGrid>
-        <ComponentCard>
-          <CardHeader>
-            <h3>Badge</h3>
-            <p>Status, category, and metadata markers with tone and size coverage.</p>
-          </CardHeader>
+        <VariantCard title="Badge" description="Status, category, and metadata markers with tone and size coverage.">
           <VariantStack>
             <VariantGroup>
               <GroupLabel>Tones</GroupLabel>
               <ComponentRow>
-                <Badge tone="neutral">Neutral</Badge>
-                <Badge tone="brand">Brand</Badge>
-                <Badge tone="success">Success</Badge>
-                <Badge tone="warning">Warning</Badge>
-                <Badge tone="danger">Error</Badge>
+                {badgeTones.map((tone) => (
+                  <Badge key={tone} tone={tone}>
+                    {tone === 'danger' ? 'Error' : titleCase(tone)}
+                  </Badge>
+                ))}
               </ComponentRow>
             </VariantGroup>
             <VariantGroup>
@@ -182,30 +248,22 @@ function ComponentInventory() {
               </ComponentRow>
             </VariantGroup>
           </VariantStack>
-        </ComponentCard>
+        </VariantCard>
 
-        <ComponentCard>
-          <CardHeader>
-            <h3>Button</h3>
-            <p>Action hierarchy, destructive actions, icon support, and disabled states.</p>
-          </CardHeader>
+        <VariantCard title="Button" description="Action hierarchy, destructive actions, icon support, and disabled states.">
           <VariantStack>
             <VariantGroup>
               <GroupLabel>Variants</GroupLabel>
               <ButtonColumn>
-                <Button onClick={() => setLastAction('Primary action selected')}>Primary</Button>
-                <Button variant="secondary" onClick={() => setLastAction('Secondary action selected')}>
-                  Secondary
-                </Button>
-                <Button variant="tertiary" onClick={() => setLastAction('Tertiary action selected')}>
-                  Tertiary
-                </Button>
-                <Button variant="destructive" onClick={() => setLastAction('Destructive action selected')}>
-                  Destructive
-                </Button>
-                <Button variant="link" onClick={() => setLastAction('Link-style action selected')}>
-                  Link action
-                </Button>
+                {buttonVariants.map((variant) => (
+                  <Button
+                    key={variant}
+                    variant={variant}
+                    onClick={() => setLastAction(`${titleCase(variant)} action selected`)}
+                  >
+                    {variant === 'link' ? 'Link action' : titleCase(variant)}
+                  </Button>
+                ))}
                 <InteractionStatus aria-live="polite">
                   <Badge size="sm" tone="neutral">
                     Live
@@ -242,13 +300,9 @@ function ComponentInventory() {
               </ComponentRow>
             </VariantGroup>
           </VariantStack>
-        </ComponentCard>
+        </VariantCard>
 
-        <ComponentCard>
-          <CardHeader>
-            <h3>TextInput</h3>
-            <p>Accessible label, hint, validation, icon, and disabled examples.</p>
-          </CardHeader>
+        <VariantCard title="TextInput" description="Accessible label, hint, validation, icon, and disabled examples.">
           <VariantStack>
             <TextInput label="Email address" placeholder="you@example.com" hint="Use a work email for team workspaces." />
             <TextInput label="Search" placeholder="Search components" leftIcon={<SearchIcon />} />
@@ -260,13 +314,9 @@ function ComponentInventory() {
             />
             <TextInput label="Read only contact" disabled defaultValue="readonly@example.com" />
           </VariantStack>
-        </ComponentCard>
+        </VariantCard>
 
-        <ComponentCard>
-          <CardHeader>
-            <h3>Headless</h3>
-            <p>Compositional primitives for menus and dialogs, styled here only by the homepage shell.</p>
-          </CardHeader>
+        <VariantCard title="Headless" description="Compositional primitives for menus and dialogs, styled here only by the homepage shell.">
           <VariantStack>
             <VariantGroup>
               <GroupLabel>Dropdown</GroupLabel>
@@ -300,8 +350,42 @@ function ComponentInventory() {
               </Modal.Root>
             </VariantGroup>
           </VariantStack>
-        </ComponentCard>
+        </VariantCard>
       </ComponentGrid>
+    </Showcase>
+  );
+}
+
+function CompositionOverview() {
+  return (
+    <Showcase id="composition">
+      <SectionHeader>
+        <h2>Composition Model</h2>
+        <p>Atoms stay small, molecules bind structure, organisms combine real product behavior, and headless primitives own interaction state.</p>
+      </SectionHeader>
+      <SplitGrid>
+        <ComponentCard>
+          <CardHeader>
+            <h3>Molecule</h3>
+            <p>FormField accepts any control so products can compose labels, help text, and validation around custom inputs.</p>
+          </CardHeader>
+          <FormField
+            label="Release channel"
+            description="A molecule wrapper can frame a headless primitive without owning its behavior."
+            control={
+              <Dropdown.Root>
+                <Dropdown.Trigger>Stable</Dropdown.Trigger>
+                <Dropdown.Content aria-label="Release channels">
+                  <Dropdown.Item>Stable</Dropdown.Item>
+                  <Dropdown.Item>Beta</Dropdown.Item>
+                  <Dropdown.Item disabled>Experimental</Dropdown.Item>
+                </Dropdown.Content>
+              </Dropdown.Root>
+            }
+          />
+        </ComponentCard>
+        <PreferencesPanel />
+      </SplitGrid>
     </Showcase>
   );
 }
@@ -314,21 +398,13 @@ function TokenOverview() {
         <p>The homepage responds to semantic color, radius, spacing, typography, and shadow tokens without changing component internals.</p>
       </SectionHeader>
       <TokenGrid>
-        <TokenSwatch>
-          <SwatchPreview $tone="brand" />
-          <strong>Brand action</strong>
-          <span>Interactive affordances and selected navigation states.</span>
-        </TokenSwatch>
-        <TokenSwatch>
-          <SwatchPreview $tone="surface" />
-          <strong>Layered surfaces</strong>
-          <span>Cards, panels, controls, and soft page backgrounds.</span>
-        </TokenSwatch>
-        <TokenSwatch>
-          <SwatchPreview $tone="success" />
-          <strong>Status feedback</strong>
-          <span>Semantic state tokens shared by badges and messaging.</span>
-        </TokenSwatch>
+        {tokenHighlights.map(([tone, title, description]) => (
+          <TokenSwatch key={title}>
+            <SwatchPreview $tone={tone} />
+            <strong>{title}</strong>
+            <span>{description}</span>
+          </TokenSwatch>
+        ))}
       </TokenGrid>
     </Showcase>
   );
@@ -336,16 +412,31 @@ function TokenOverview() {
 
 function SystemNotes() {
   return (
-    <FooterBand id="system">
-      <div>
-        <Badge tone="success">Ready for composition</Badge>
-        <Lead>Storybook remains the source for isolated docs; this dashboard shows the product-facing surface.</Lead>
-      </div>
-      <ActionLink href="#overview" $variant="secondary">
-        Review foundations
-        <ArrowIcon />
-      </ActionLink>
-    </FooterBand>
+    <Showcase id="system">
+      <SectionHeader>
+        <h2>System Notes</h2>
+        <p>Validation summary for the foundation exercises in this repo.</p>
+      </SectionHeader>
+      <SystemGrid>
+        {systemChecklist.map((item) => (
+          <SystemItem key={item.label} $checked={item.checked}>
+            <Badge tone={item.checked ? 'success' : 'warning'}>{item.checked ? 'Checked' : 'Needs review'}</Badge>
+            <strong>{item.label}</strong>
+            <span>{item.detail}</span>
+          </SystemItem>
+        ))}
+      </SystemGrid>
+      <FooterBand>
+        <div>
+          <Badge tone="success">Ready for composition</Badge>
+          <Lead>Storybook remains the source for isolated docs; this dashboard shows the product-facing surface.</Lead>
+        </div>
+        <ActionLink href="#overview" $variant="secondary">
+          Review foundations
+          <ArrowIcon />
+        </ActionLink>
+      </FooterBand>
+    </Showcase>
   );
 }
 
@@ -360,6 +451,7 @@ export function HomePage() {
         <Main>
           <HeroSection />
           <ComponentInventory />
+          <CompositionOverview />
           <TokenOverview />
           <SystemNotes />
         </Main>
