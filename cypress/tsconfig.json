@@ -1,0 +1,9 @@
+{
+  "extends": "../tsconfig.json",
+  "compilerOptions": {
+    "lib": ["DOM", "DOM.Iterable", "ES2020"],
+    "types": ["cypress", "node"],
+    "noEmit": true
+  },
+  "include": ["e2e/**/*.ts", "e2e/**/*.tsx", "../cypress.config.ts"]
+}
